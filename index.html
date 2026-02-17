@@ -3,115 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barta - Real WhatsApp Clone</title>
+    <title>Barta - Professional Messenger</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --wa-green: #075e54; --wa-light: #128c7e; --bg: #e5ddd5; --teal: #25d366; }
+        :root { --wa-green: #075e54; --wa-light: #128c7e; --wa-teal: #25d366; --bg: #e5ddd5; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #d1d7db; height: 100vh; display: flex; justify-content: center; }
+        body { background: #d1d7db; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
 
-        /* প্রধান কন্টেইনার */
-        .app-container { width: 100%; max-width: 450px; height: 100vh; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-
-        /* স্ক্রিন ম্যানেজমেন্ট */
-        .screen { display: none; flex-direction: column; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: white; }
+        .app-container { width: 100%; max-width: 420px; height: 100vh; background: #fff; display: flex; flex-direction: column; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; background: #fff; }
         .active { display: flex; }
 
-        /* হেডার */
-        .header { background: var(--wa-green); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
-        .header h3 { font-size: 18px; }
+        /* Header */
+        .header { background: var(--wa-green); color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 18px; font-weight: 600; }
+        
+        /* Login Screen */
+        #screen-login { justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .login-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: #fff; font-size: 15px; }
+        .google-btn { background: #db4437; }
+        .phone-btn { background: var(--wa-green); }
 
-        /* ইউজার লিস্ট */
+        /* User List */
         .user-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f2f2f2; cursor: pointer; transition: 0.2s; }
         .user-item:hover { background: #f5f5f5; }
-        .user-item img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; background: #eee; }
-        .user-info h4 { font-size: 16px; color: #111; }
-        .user-info p { font-size: 13px; color: #666; }
+        .user-item img { width: 45px; height: 45px; border-radius: 50%; margin-right: 15px; object-fit: cover; background: #eee; }
+        .user-info h4 { font-size: 15px; color: #111; }
+        .user-info p { font-size: 12px; color: #777; }
 
-        /* চ্যাট উইন্ডো */
-        #chat-screen { background: var(--bg); }
+        /* Chat Screen */
+        #screen-chat { background: var(--bg); }
         .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 14px; position: relative; line-height: 1.4; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .sent { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
-        .received { background: white; align-self: flex-start; border-top-left-radius: 0; }
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.15); }
+        .sent { background: #dcf8c6; align-self: flex-end; }
+        .received { background: #fff; align-self: flex-start; }
         .msg-time { font-size: 10px; color: #888; text-align: right; margin-top: 4px; }
 
-        /* ইনপুট এরিয়া */
-        .input-area { background: #f0f0f0; padding: 8px 12px; display: flex; align-items: center; gap: 10px; }
-        .input-area input { flex: 1; border: none; padding: 10px 15px; border-radius: 20px; outline: none; font-size: 15px; }
-        .send-btn { background: var(--wa-green); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+        /* Input Area */
+        .input-area { background: #f0f0f0; padding: 8px; display: flex; align-items: center; gap: 10px; }
+        .input-area input { flex: 1; border: none; padding: 10px 15px; border-radius: 20px; outline: none; }
+        .send-btn { background: var(--wa-green); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
 
-        /* প্রোফাইল সেকশন */
-        .profile-box { padding: 20px; text-align: center; }
-        .profile-box img { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--wa-green); }
-        .profile-box input { width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-
-        /* লগইন বাটন */
-        .login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 20px; text-align: center; }
-        .google-btn { background: #db4437; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* Profile Screen */
+        .profile-content { padding: 20px; text-align: center; }
+        .profile-img-container { position: relative; display: inline-block; }
+        .profile-img-container img { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--wa-green); object-fit: cover; }
+        .img-edit-icon { position: absolute; bottom: 5px; right: 5px; background: var(--wa-green); color: #fff; padding: 8px; border-radius: 50%; cursor: pointer; }
+        .profile-content input { width: 100%; margin: 15px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    
     <div id="screen-login" class="screen active">
-        <div class="login-box">
-            <i class="fab fa-whatsapp" style="font-size: 80px; color: var(--teal); margin-bottom: 20px;"></i>
-            <h2>Barta App-এ স্বাগতম</h2>
-            <p style="margin-bottom: 30px; color: #666;">শুরু করতে গুগল দিয়ে লগইন করুন</p>
-            <button class="google-btn" id="btn-login"><i class="fab fa-google"></i> Google Login</button>
-        </div>
+        <i class="fab fa-whatsapp" style="font-size: 70px; color: var(--wa-teal); margin-bottom: 20px;"></i>
+        <h2>WhatsApp Clone</h2>
+        <button class="login-btn google-btn" id="login-google"><i class="fab fa-google"></i> Login with Google</button>
+        <button class="login-btn phone-btn" onclick="alert('Phone Auth requires ReCaptcha setup in Firebase.')"><i class="fas fa-phone"></i> Login with Phone</button>
     </div>
 
     <div id="screen-home" class="screen">
         <div class="header">
-            <h3>Barta Messenger</h3>
+            <span>WhatsApp</span>
             <div>
-                <i class="fas fa-user-edit" onclick="showScreen('screen-profile')" style="cursor:pointer; margin-right: 15px;"></i>
+                <i class="fas fa-user-circle" onclick="showScreen('screen-profile')" style="cursor:pointer; margin-right: 15px;"></i>
                 <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer;"></i>
             </div>
         </div>
-        <div id="user-list" style="overflow-y: auto; flex: 1;">
-            </div>
+        <div id="user-list-container" style="flex: 1; overflow-y: auto;"></div>
     </div>
 
     <div id="screen-chat" class="screen">
         <div class="header">
             <div style="display:flex; align-items:center;">
                 <i class="fas fa-arrow-left" onclick="showScreen('screen-home')" style="cursor:pointer; margin-right:15px;"></i>
-                <img id="chat-user-img" src="" style="width:35px; height:35px; border-radius:50%; margin-right:10px;">
-                <h4 id="chat-user-name">Name</h4>
+                <img id="chat-header-img" src="" style="width:35px; height:35px; border-radius:50%; margin-right:10px;">
+                <span id="chat-header-name">Name</span>
             </div>
         </div>
         <div class="chat-body" id="chatBox"></div>
         <div class="input-area">
-            <input type="text" id="msgInput" placeholder="মেসেজ লিখুন...">
+            <input type="text" id="msgInput" placeholder="Type a message...">
             <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
     <div id="screen-profile" class="screen">
         <div class="header">
-            <div style="display:flex; align-items:center;">
-                <i class="fas fa-arrow-left" onclick="showScreen('screen-home')" style="cursor:pointer; margin-right:15px;"></i>
-                <h3>প্রোফাইল সেটিংস</h3>
-            </div>
+            <i class="fas fa-arrow-left" onclick="showScreen('screen-home')" style="cursor:pointer;"></i>
+            <span>Profile Settings</span>
         </div>
-        <div class="profile-box">
-            <img id="my-profile-img" src="https://via.placeholder.com/100">
-            <p style="margin-top: 10px; font-size: 12px; color: #666;">ইউজার আইডি: <span id="my-uid"></span></p>
-            <input type="text" id="new-name" placeholder="আপনার নাম">
-            <button onclick="updateProfile()" style="background: var(--wa-green); color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">Update Profile</button>
+        <div class="profile-content">
+            <div class="profile-img-container">
+                <img id="my-avatar" src="https://via.placeholder.com/120">
+                <label for="img-upload" class="img-edit-icon"><i class="fas fa-camera"></i></label>
+                <input type="file" id="img-upload" accept="image/*" style="display:none">
+            </div>
+            <input type="text" id="my-new-name" placeholder="Your Name">
+            <button onclick="updateUserData()" style="background:var(--wa-green); color:#fff; border:none; padding:10px 20px; border-radius:5px; width:100%;">Save Profile</button>
         </div>
     </div>
-
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, set, push, onValue, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCTYtlZE2TU8QKnu1hirUu6Y6wiJWRt0fI",
@@ -125,92 +122,80 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
+    const storage = getStorage(app);
 
     let me = null;
-    let selectedUID = null;
+    let targetUID = null;
 
-    // স্ক্রিন পরিবর্তন ফাংশন
     window.showScreen = (id) => {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     };
 
-    // লগইন
-    document.getElementById('btn-login').onclick = () => {
-        signInWithPopup(auth, new GoogleAuthProvider());
-    };
-
-    // লগআউট
+    document.getElementById('login-google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
     window.logout = () => signOut(auth).then(() => location.reload());
 
-    // অথেন্টিকেশন চেক (পারমানেন্ট লগইন)
+    // পারমানেন্ট লগইন এবং ইউজার ডাটা সেভ
     onAuthStateChanged(auth, (user) => {
         if (user) {
             me = user;
-            // ডাটাবেসে ইউজার সেভ করা
-            set(ref(db, 'users/' + user.uid), {
-                uid: user.uid,
-                name: user.displayName,
-                photo: user.photoURL,
-                online: true
-            });
+            const userRef = ref(db, 'users/' + user.uid);
+            onValue(userRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    set(userRef, { uid: user.uid, name: user.displayName, photo: user.photoURL });
+                } else {
+                    const data = snapshot.val();
+                    document.getElementById('my-avatar').src = data.photo || 'https://via.placeholder.com/120';
+                    document.getElementById('my-new-name').value = data.name;
+                }
+            }, { onlyOnce: true });
             
-            document.getElementById('my-profile-img').src = user.photoURL;
-            document.getElementById('new-name').value = user.displayName;
-            document.getElementById('my-uid').innerText = user.uid;
-
             showScreen('screen-home');
-            loadUserList();
+            renderUserList();
         } else {
             showScreen('screen-login');
         }
     });
 
-    // ইউজার লিস্ট লোড করা
-    function loadUserList() {
-        const userListDiv = document.getElementById('user-list');
-        onValue(ref(db, 'users'), (snapshot) => {
-            userListDiv.innerHTML = "";
-            snapshot.forEach((child) => {
-                const user = child.val();
-                if (user.uid !== me.uid) {
+    // ইউজার লিস্ট দেখা (অন্যান্য ইউজারদের ডাটাবেস থেকে আনা)
+    function renderUserList() {
+        onValue(ref(db, 'users'), (snap) => {
+            const container = document.getElementById('user-list-container');
+            container.innerHTML = "";
+            snap.forEach(child => {
+                const u = child.val();
+                if (u.uid !== me.uid) {
                     const div = document.createElement('div');
                     div.className = 'user-item';
                     div.innerHTML = `
-                        <img src="${user.photo || 'https://via.placeholder.com/50'}">
+                        <img src="${u.photo || 'https://via.placeholder.com/45'}">
                         <div class="user-info">
-                            <h4>${user.name}</h4>
-                            <p>মেসেজ করতে ক্লিক করুন</p>
+                            <h4>${u.name}</h4>
+                            <p>Click to chat</p>
                         </div>
                     `;
-                    div.onclick = () => openChat(user);
-                    userListDiv.appendChild(div);
+                    div.onclick = () => startChat(u);
+                    container.appendChild(div);
                 }
             });
         });
     }
 
-    // চ্যাট ওপেন করা
-    function openChat(user) {
-        selectedUID = user.uid;
-        document.getElementById('chat-user-name').innerText = user.name;
-        document.getElementById('chat-user-img').src = user.photo;
-        document.getElementById('chatBox').innerHTML = "";
+    // চ্যাট শুরু করা
+    function startChat(user) {
+        targetUID = user.uid;
+        document.getElementById('chat-header-name').innerText = user.name;
+        document.getElementById('chat-header-img').src = user.photo;
         showScreen('screen-chat');
         loadMessages();
     }
 
-    // প্রাইভেট চ্যাট আইডি জেনারেট করা
-    function getChatID(uid1, uid2) {
-        return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
-    }
-
-    // মেসেজ পাঠানো
+    // চ্যাট মেসেজ সেভ করা
     document.getElementById('sendBtn').onclick = () => {
         const text = document.getElementById('msgInput').value.trim();
-        if (text && selectedUID) {
-            const chatID = getChatID(me.uid, selectedUID);
-            push(ref(db, 'chats/' + chatID), {
+        if (text && targetUID) {
+            const chatId = me.uid < targetUID ? `${me.uid}_${targetUID}` : `${targetUID}_${me.uid}`;
+            push(ref(db, 'chats/' + chatId), {
                 sender: me.uid,
                 text: text,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -219,29 +204,40 @@
         }
     };
 
-    // মেসেজ লোড করা
     function loadMessages() {
-        const chatID = getChatID(me.uid, selectedUID);
-        const chatBox = document.getElementById('chatBox');
-        onValue(ref(db, 'chats/' + chatID), (snapshot) => {
+        const chatId = me.uid < targetUID ? `${me.uid}_${targetUID}` : `${targetUID}_${me.uid}`;
+        onValue(ref(db, 'chats/' + chatId), (snap) => {
+            const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = "";
-            snapshot.forEach((child) => {
-                const msg = child.val();
+            snap.forEach(child => {
+                const m = child.val();
                 const div = document.createElement('div');
-                div.className = `msg ${msg.sender === me.uid ? 'sent' : 'received'}`;
-                div.innerHTML = `${msg.text} <div class="msg-time">${msg.time}</div>`;
+                div.className = `msg ${m.sender === me.uid ? 'sent' : 'received'}`;
+                div.innerHTML = `${m.text} <div class="msg-time">${m.time}</div>`;
                 chatBox.appendChild(div);
             });
             chatBox.scrollTop = chatBox.scrollHeight;
         });
     }
 
-    // প্রোফাইল আপডেট
-    window.updateProfile = () => {
-        const newName = document.getElementById('new-name').value;
-        if (newName) {
-            update(ref(db, 'users/' + me.uid), { name: newName });
-            alert("প্রোফাইল আপডেট হয়েছে!");
+    // প্রোফাইল পিকচার এবং নাম আপডেট
+    document.getElementById('img-upload').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const fileRef = sRef(storage, 'profiles/' + me.uid);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            document.getElementById('my-avatar').src = url;
+            update(ref(db, 'users/' + me.uid), { photo: url });
+            alert("ছবি আপলোড হয়েছে!");
+        }
+    };
+
+    window.updateUserData = () => {
+        const n = document.getElementById('my-new-name').value;
+        if (n) {
+            update(ref(db, 'users/' + me.uid), { name: n });
+            alert("নাম আপডেট হয়েছে!");
             showScreen('screen-home');
         }
     };
