@@ -3,158 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barta - Secure Messenger</title>
+    <title>Barta - Real WhatsApp Clone</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --green: #075e54; --light-green: #128c7e; --bg: #e5ddd5; }
+        :root { --wa-green: #075e54; --wa-light: #128c7e; --bg: #e5ddd5; --teal: #25d366; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        
-        body { background-color: #f0f2f5; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        body { background: #d1d7db; height: 100vh; display: flex; justify-content: center; }
 
-        /* লগইন স্ক্রিন */
-        #login-screen { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
-        #login-screen h1 { color: var(--green); margin-bottom: 20px; }
-        .login-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
-        .google-btn { background: #db4437; color: white; }
-        .phone-btn { background: var(--green); color: white; }
-        
-        /* চ্যাট স্ক্রিন (শুরুতে লুকানো) */
-        #chat-screen { display: none; width: 100%; height: 100vh; flex-direction: column; background: var(--bg); }
-        .header { background: var(--green); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-info img { width: 35px; height: 35px; border-radius: 50%; background: #ddd; }
-        
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .message { max-width: 80%; padding: 10px; border-radius: 10px; font-size: 14px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-        .sent { background: #dcf8c6; align-self: flex-end; }
-        .received { background: white; align-self: flex-start; }
-        .msg-user { font-size: 10px; color: var(--green); font-weight: bold; margin-bottom: 3px; }
-        .time { font-size: 9px; color: #888; text-align: right; margin-top: 4px; }
+        /* প্রধান কন্টেইনার */
+        .app-container { width: 100%; max-width: 450px; height: 100vh; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
-        .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; align-items: center; }
-        .input-group { flex: 1; background: white; border-radius: 25px; padding: 5px 15px; }
-        .input-group input { width: 100%; border: none; padding: 10px; outline: none; }
-        .send-btn { background: var(--green); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
+        /* স্ক্রিন ম্যানেজমেন্ট */
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; position: absolute; top: 0; left: 0; background: white; }
+        .active { display: flex; }
+
+        /* হেডার */
+        .header { background: var(--wa-green); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
+        .header h3 { font-size: 18px; }
+
+        /* ইউজার লিস্ট */
+        .user-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f2f2f2; cursor: pointer; transition: 0.2s; }
+        .user-item:hover { background: #f5f5f5; }
+        .user-item img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; background: #eee; }
+        .user-info h4 { font-size: 16px; color: #111; }
+        .user-info p { font-size: 13px; color: #666; }
+
+        /* চ্যাট উইন্ডো */
+        #chat-screen { background: var(--bg); }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 14px; position: relative; line-height: 1.4; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .sent { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
+        .received { background: white; align-self: flex-start; border-top-left-radius: 0; }
+        .msg-time { font-size: 10px; color: #888; text-align: right; margin-top: 4px; }
+
+        /* ইনপুট এরিয়া */
+        .input-area { background: #f0f0f0; padding: 8px 12px; display: flex; align-items: center; gap: 10px; }
+        .input-area input { flex: 1; border: none; padding: 10px 15px; border-radius: 20px; outline: none; font-size: 15px; }
+        .send-btn { background: var(--wa-green); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+
+        /* প্রোফাইল সেকশন */
+        .profile-box { padding: 20px; text-align: center; }
+        .profile-box img { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--wa-green); }
+        .profile-box input { width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+
+        /* লগইন বাটন */
+        .login-box { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 20px; text-align: center; }
+        .google-btn { background: #db4437; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h1>Barta App</h1>
-        <p>চ্যাট শুরু করতে লগইন করুন</p>
-        <button class="login-btn google-btn" id="googleLogin">
-            <i class="fab fa-google"></i> Google দিয়ে লগইন
-        </button>
-        <button class="login-btn phone-btn" id="phoneLogin">
-            <i class="fas fa-phone"></i> মোবাইল নম্বর দিয়ে লগইন
-        </button>
+<div class="app-container">
+    
+    <div id="screen-login" class="screen active">
+        <div class="login-box">
+            <i class="fab fa-whatsapp" style="font-size: 80px; color: var(--teal); margin-bottom: 20px;"></i>
+            <h2>Barta App-এ স্বাগতম</h2>
+            <p style="margin-bottom: 30px; color: #666;">শুরু করতে গুগল দিয়ে লগইন করুন</p>
+            <button class="google-btn" id="btn-login"><i class="fab fa-google"></i> Google Login</button>
+        </div>
     </div>
 
-    <div id="chat-screen">
+    <div id="screen-home" class="screen">
         <div class="header">
-            <div class="user-info">
-                <img id="userImg" src="" alt="">
-                <div>
-                    <h4 id="userName">User Name</h4>
-                    <p style="font-size: 10px; opacity: 0.8;">Online</p>
-                </div>
+            <h3>Barta Messenger</h3>
+            <div>
+                <i class="fas fa-user-edit" onclick="showScreen('screen-profile')" style="cursor:pointer; margin-right: 15px;"></i>
+                <i class="fas fa-sign-out-alt" onclick="logout()" style="cursor:pointer;"></i>
             </div>
-            <button onclick="logout()" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-sign-out-alt"></i></button>
         </div>
-        <div class="chat-container" id="chatBox"></div>
-        <div class="input-area">
-            <div class="input-group">
-                <input type="text" id="msgInput" placeholder="মেসেজ লিখুন..." autocomplete="off">
+        <div id="user-list" style="overflow-y: auto; flex: 1;">
             </div>
+    </div>
+
+    <div id="screen-chat" class="screen">
+        <div class="header">
+            <div style="display:flex; align-items:center;">
+                <i class="fas fa-arrow-left" onclick="showScreen('screen-home')" style="cursor:pointer; margin-right:15px;"></i>
+                <img id="chat-user-img" src="" style="width:35px; height:35px; border-radius:50%; margin-right:10px;">
+                <h4 id="chat-user-name">Name</h4>
+            </div>
+        </div>
+        <div class="chat-body" id="chatBox"></div>
+        <div class="input-area">
+            <input type="text" id="msgInput" placeholder="মেসেজ লিখুন...">
             <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <div id="screen-profile" class="screen">
+        <div class="header">
+            <div style="display:flex; align-items:center;">
+                <i class="fas fa-arrow-left" onclick="showScreen('screen-home')" style="cursor:pointer; margin-right:15px;"></i>
+                <h3>প্রোফাইল সেটিংস</h3>
+            </div>
+        </div>
+        <div class="profile-box">
+            <img id="my-profile-img" src="https://via.placeholder.com/100">
+            <p style="margin-top: 10px; font-size: 12px; color: #666;">ইউজার আইডি: <span id="my-uid"></span></p>
+            <input type="text" id="new-name" placeholder="আপনার নাম">
+            <button onclick="updateProfile()" style="background: var(--wa-green); color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">Update Profile</button>
+        </div>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCTYtlZE2TU8QKnu1hirUu6Y6wiJWRt0fI",
-            authDomain: "barta-23821.firebaseapp.com",
-            projectId: "barta-23821",
-            storageBucket: "barta-23821.firebasestorage.app",
-            messagingSenderId: "640615948260",
-            appId: "1:640615948260:web:bf18e37d9359c6f0e6f1f1",
-            measurementId: "G-LE96KP4L16"
-        };
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        const messagesRef = ref(db, "messages");
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        let currentUser = null;
+    const firebaseConfig = {
+        apiKey: "AIzaSyCTYtlZE2TU8QKnu1hirUu6Y6wiJWRt0fI",
+        authDomain: "barta-23821.firebaseapp.com",
+        projectId: "barta-23821",
+        storageBucket: "barta-23821.firebasestorage.app",
+        messagingSenderId: "640615948260",
+        appId: "1:640615948260:web:bf18e37d9359c6f0e6f1f1"
+    };
 
-        // গুগল লগইন
-        document.getElementById('googleLogin').onclick = () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(err => alert(err.message));
-        };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-        // ফোন লগইন (সহজ করার জন্য আপাতত একটি প্রম্পট সিস্টেম রাখা হয়েছে)
-        document.getElementById('phoneLogin').onclick = () => {
-            alert("মোবাইল লগইন ফিচারটি Firebase Console থেকে SMS API কনফিগার করা প্রয়োজন। বর্তমানে গুগল লগইন ব্যবহার করুন।");
-        };
+    let me = null;
+    let selectedUID = null;
 
-        // লগআউট
-        window.logout = () => signOut(auth);
+    // স্ক্রিন পরিবর্তন ফাংশন
+    window.showScreen = (id) => {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    };
 
-        // ইউজার স্টেট পরিবর্তন পর্যবেক্ষণ
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('chat-screen').style.display = 'flex';
-                document.getElementById('userName').innerText = user.displayName || user.email;
-                document.getElementById('userImg').src = user.photoURL || 'https://via.placeholder.com/35';
-                loadMessages();
-            } else {
-                document.getElementById('login-screen').style.display = 'block';
-                document.getElementById('chat-screen').style.display = 'none';
-            }
-        });
+    // লগইন
+    document.getElementById('btn-login').onclick = () => {
+        signInWithPopup(auth, new GoogleAuthProvider());
+    };
 
-        // মেসেজ পাঠানো
-        function sendMessage() {
-            const text = document.getElementById('msgInput').value.trim();
-            if (text !== "" && currentUser) {
-                push(messagesRef, {
-                    uid: currentUser.uid,
-                    name: currentUser.displayName || "User",
-                    text: text,
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                });
-                document.getElementById('msgInput').value = "";
-            }
-        }
+    // লগআউট
+    window.logout = () => signOut(auth).then(() => location.reload());
 
-        document.getElementById('sendBtn').onclick = sendMessage;
-        document.getElementById('msgInput').onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
-
-        // মেসেজ লোড করা
-        function loadMessages() {
-            document.getElementById('chatBox').innerHTML = ""; // রিসেট
-            onChildAdded(messagesRef, (data) => {
-                const msg = data.val();
-                const div = document.createElement('div');
-                const isMe = msg.uid === currentUser.uid;
-                div.className = `message ${isMe ? 'sent' : 'received'}`;
-                div.innerHTML = `
-                    <div class="msg-user">${isMe ? "আপনি" : msg.name}</div>
-                    ${msg.text}
-                    <div class="time">${msg.time}</div>
-                `;
-                document.getElementById('chatBox').appendChild(div);
-                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+    // অথেন্টিকেশন চেক (পারমানেন্ট লগইন)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            me = user;
+            // ডাটাবেসে ইউজার সেভ করা
+            set(ref(db, 'users/' + user.uid), {
+                uid: user.uid,
+                name: user.displayName,
+                photo: user.photoURL,
+                online: true
             });
+            
+            document.getElementById('my-profile-img').src = user.photoURL;
+            document.getElementById('new-name').value = user.displayName;
+            document.getElementById('my-uid').innerText = user.uid;
+
+            showScreen('screen-home');
+            loadUserList();
+        } else {
+            showScreen('screen-login');
         }
-    </script>
+    });
+
+    // ইউজার লিস্ট লোড করা
+    function loadUserList() {
+        const userListDiv = document.getElementById('user-list');
+        onValue(ref(db, 'users'), (snapshot) => {
+            userListDiv.innerHTML = "";
+            snapshot.forEach((child) => {
+                const user = child.val();
+                if (user.uid !== me.uid) {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.innerHTML = `
+                        <img src="${user.photo || 'https://via.placeholder.com/50'}">
+                        <div class="user-info">
+                            <h4>${user.name}</h4>
+                            <p>মেসেজ করতে ক্লিক করুন</p>
+                        </div>
+                    `;
+                    div.onclick = () => openChat(user);
+                    userListDiv.appendChild(div);
+                }
+            });
+        });
+    }
+
+    // চ্যাট ওপেন করা
+    function openChat(user) {
+        selectedUID = user.uid;
+        document.getElementById('chat-user-name').innerText = user.name;
+        document.getElementById('chat-user-img').src = user.photo;
+        document.getElementById('chatBox').innerHTML = "";
+        showScreen('screen-chat');
+        loadMessages();
+    }
+
+    // প্রাইভেট চ্যাট আইডি জেনারেট করা
+    function getChatID(uid1, uid2) {
+        return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
+    }
+
+    // মেসেজ পাঠানো
+    document.getElementById('sendBtn').onclick = () => {
+        const text = document.getElementById('msgInput').value.trim();
+        if (text && selectedUID) {
+            const chatID = getChatID(me.uid, selectedUID);
+            push(ref(db, 'chats/' + chatID), {
+                sender: me.uid,
+                text: text,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            document.getElementById('msgInput').value = "";
+        }
+    };
+
+    // মেসেজ লোড করা
+    function loadMessages() {
+        const chatID = getChatID(me.uid, selectedUID);
+        const chatBox = document.getElementById('chatBox');
+        onValue(ref(db, 'chats/' + chatID), (snapshot) => {
+            chatBox.innerHTML = "";
+            snapshot.forEach((child) => {
+                const msg = child.val();
+                const div = document.createElement('div');
+                div.className = `msg ${msg.sender === me.uid ? 'sent' : 'received'}`;
+                div.innerHTML = `${msg.text} <div class="msg-time">${msg.time}</div>`;
+                chatBox.appendChild(div);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    }
+
+    // প্রোফাইল আপডেট
+    window.updateProfile = () => {
+        const newName = document.getElementById('new-name').value;
+        if (newName) {
+            update(ref(db, 'users/' + me.uid), { name: newName });
+            alert("প্রোফাইল আপডেট হয়েছে!");
+            showScreen('screen-home');
+        }
+    };
+</script>
 </body>
 </html>
