@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barta - Secure Messenger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --green: #075e54; --light-green: #128c7e; --bg: #e5ddd5; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body { background-color: #f0f2f5; height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+        /* লগইন স্ক্রিন */
+        #login-screen { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        #login-screen h1 { color: var(--green); margin-bottom: 20px; }
+        .login-btn { width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .google-btn { background: #db4437; color: white; }
+        .phone-btn { background: var(--green); color: white; }
+        
+        /* চ্যাট স্ক্রিন (শুরুতে লুকানো) */
+        #chat-screen { display: none; width: 100%; height: 100vh; flex-direction: column; background: var(--bg); }
+        .header { background: var(--green); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-info img { width: 35px; height: 35px; border-radius: 50%; background: #ddd; }
+        
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        .message { max-width: 80%; padding: 10px; border-radius: 10px; font-size: 14px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
+        .sent { background: #dcf8c6; align-self: flex-end; }
+        .received { background: white; align-self: flex-start; }
+        .msg-user { font-size: 10px; color: var(--green); font-weight: bold; margin-bottom: 3px; }
+        .time { font-size: 9px; color: #888; text-align: right; margin-top: 4px; }
+
+        .input-area { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; align-items: center; }
+        .input-group { flex: 1; background: white; border-radius: 25px; padding: 5px 15px; }
+        .input-group input { width: 100%; border: none; padding: 10px; outline: none; }
+        .send-btn { background: var(--green); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1>Barta App</h1>
+        <p>চ্যাট শুরু করতে লগইন করুন</p>
+        <button class="login-btn google-btn" id="googleLogin">
+            <i class="fab fa-google"></i> Google দিয়ে লগইন
+        </button>
+        <button class="login-btn phone-btn" id="phoneLogin">
+            <i class="fas fa-phone"></i> মোবাইল নম্বর দিয়ে লগইন
+        </button>
+    </div>
+
+    <div id="chat-screen">
+        <div class="header">
+            <div class="user-info">
+                <img id="userImg" src="" alt="">
+                <div>
+                    <h4 id="userName">User Name</h4>
+                    <p style="font-size: 10px; opacity: 0.8;">Online</p>
+                </div>
+            </div>
+            <button onclick="logout()" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+        <div class="chat-container" id="chatBox"></div>
+        <div class="input-area">
+            <div class="input-group">
+                <input type="text" id="msgInput" placeholder="মেসেজ লিখুন..." autocomplete="off">
+            </div>
+            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTYtlZE2TU8QKnu1hirUu6Y6wiJWRt0fI",
+            authDomain: "barta-23821.firebaseapp.com",
+            projectId: "barta-23821",
+            storageBucket: "barta-23821.firebasestorage.app",
+            messagingSenderId: "640615948260",
+            appId: "1:640615948260:web:bf18e37d9359c6f0e6f1f1",
+            measurementId: "G-LE96KP4L16"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const messagesRef = ref(db, "messages");
+
+        let currentUser = null;
+
+        // গুগল লগইন
+        document.getElementById('googleLogin').onclick = () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch(err => alert(err.message));
+        };
+
+        // ফোন লগইন (সহজ করার জন্য আপাতত একটি প্রম্পট সিস্টেম রাখা হয়েছে)
+        document.getElementById('phoneLogin').onclick = () => {
+            alert("মোবাইল লগইন ফিচারটি Firebase Console থেকে SMS API কনফিগার করা প্রয়োজন। বর্তমানে গুগল লগইন ব্যবহার করুন।");
+        };
+
+        // লগআউট
+        window.logout = () => signOut(auth);
+
+        // ইউজার স্টেট পরিবর্তন পর্যবেক্ষণ
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                document.getElementById('userName').innerText = user.displayName || user.email;
+                document.getElementById('userImg').src = user.photoURL || 'https://via.placeholder.com/35';
+                loadMessages();
+            } else {
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('chat-screen').style.display = 'none';
+            }
+        });
+
+        // মেসেজ পাঠানো
+        function sendMessage() {
+            const text = document.getElementById('msgInput').value.trim();
+            if (text !== "" && currentUser) {
+                push(messagesRef, {
+                    uid: currentUser.uid,
+                    name: currentUser.displayName || "User",
+                    text: text,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+                document.getElementById('msgInput').value = "";
+            }
+        }
+
+        document.getElementById('sendBtn').onclick = sendMessage;
+        document.getElementById('msgInput').onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
+
+        // মেসেজ লোড করা
+        function loadMessages() {
+            document.getElementById('chatBox').innerHTML = ""; // রিসেট
+            onChildAdded(messagesRef, (data) => {
+                const msg = data.val();
+                const div = document.createElement('div');
+                const isMe = msg.uid === currentUser.uid;
+                div.className = `message ${isMe ? 'sent' : 'received'}`;
+                div.innerHTML = `
+                    <div class="msg-user">${isMe ? "আপনি" : msg.name}</div>
+                    ${msg.text}
+                    <div class="time">${msg.time}</div>
+                `;
+                document.getElementById('chatBox').appendChild(div);
+                document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>
